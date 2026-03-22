@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz THR GoPay</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #F5D97A;
+    --gold-dark: #8B6914;
+    --green: #00A86B;
+    --green-dark: #007A4D;
+    --cream: #FDF8EE;
+    --brown: #3D2B0E;
+    --red: #D64040;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: #1A1000;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 20%, rgba(201,168,76,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(0,168,107,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(201,168,76,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ─── ORNAMENT PATTERN ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      radial-gradient(circle, rgba(201,168,76,0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* ─── SCREEN WRAPPER ─── */
+  .screen { display: none; width: 100%; max-width: 560px; }
+  .screen.active { display: block; }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--cream);
+    border-radius: 24px;
+    padding: 40px 36px;
+    position: relative;
+    border: 1px solid rgba(201,168,76,0.3);
+    box-shadow: 0 0 0 1px rgba(201,168,76,0.1), 0 40px 80px rgba(0,0,0,0.5);
+  }
+
+  .card-border {
+    position: absolute;
+    inset: 6px;
+    border-radius: 20px;
+    border: 1px solid rgba(201,168,76,0.2);
+    pointer-events: none;
+  }
+
+  /* ─── CORNER ORNAMENTS ─── */
+  .ornament {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    opacity: 0.4;
+  }
+  .ornament svg { width: 100%; height: 100%; }
+  .ornament-tl { top: 10px; left: 10px; }
+  .ornament-tr { top: 10px; right: 10px; transform: scaleX(-1); }
+  .ornament-bl { bottom: 10px; left: 10px; transform: scaleY(-1); }
+  .ornament-br { bottom: 10px; right: 10px; transform: scale(-1); }
+
+  /* ─── HEADER BADGE ─── */
+  .gopay-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+  }
+
+  .dot-pulse {
+    width: 6px; height: 6px;
+    background: white;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ─── TITLE ─── */
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--brown);
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+
+  h1 span { color: var(--gold-dark); }
+
+  .subtitle {
+    font-size: 14px;
+    color: #7A6040;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--gold);
+    font-size: 16px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--gold), transparent);
+  }
+
+  /* ─── PROGRESS ─── */
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .progress-label { font-size: 13px; font-weight: 600; color: var(--brown); }
+  .progress-bar {
+    height: 6px;
+    background: rgba(201,168,76,0.2);
+    border-radius: 100px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--gold), var(--gold-light));
+    border-radius: 100px;
+    transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ─── QUESTION ─── */
+  .question-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    margin-bottom: 8px;
+  }
+  .question-text {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--brown);
+    margin-bottom: 24px;
+    line-height: 1.45;
+  }
+
+  /* ─── OPTIONS ─── */
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    border: 1.5px solid rgba(201,168,76,0.3);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--brown);
+    text-align: left;
+    width: 100%;
+  }
+
+  .option:hover:not(:disabled) {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.06);
+    transform: translateX(4px);
+  }
+
+  .option-letter {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: rgba(201,168,76,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold-dark);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  .option.selected {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.1);
+  }
+  .option.selected .option-letter {
+    background: var(--gold);
+    color: white;
+  }
+
+  .option.correct {
+    border-color: var(--green);
+    background: rgba(0,168,107,0.08);
+  }
+  .option.correct .option-letter { background: var(--green); color: white; }
+
+  .option.wrong {
+    border-color: var(--red);
+    background: rgba(214,64,64,0.08);
+  }
+  .option.wrong .option-letter { background: var(--red); color: white; }
+
+  .option:disabled { cursor: default; }
+
+  /* ─── FEEDBACK ─── */
+  .feedback {
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: none;
+  }
+  .feedback.correct { background: rgba(0,168,107,0.12); color: var(--green-dark); display: block; }
+  .feedback.wrong { background: rgba(214,64,64,0.1); color: #A83030; display: block; }
+
+  /* ─── BUTTON ─── */
+  .btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, #C9A84C, #E8C96A, #C9A84C);
+    background-size: 200% auto;
+    color: var(--brown);
+    box-shadow: 0 4px 20px rgba(201,168,76,0.3);
+  }
+  .btn-gold:hover { background-position: right center; transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,168,76,0.4); }
+  .btn-gold:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--brown);
+    border: 1.5px solid rgba(61,43,14,0.2);
+  }
+  .btn-ghost:hover { background: rgba(61,43,14,0.05); }
+
+  .btn-green {
+    background: var(--green);
+    color: white;
+    box-shadow: 0 4px 20px rgba(0,168,107,0.3);
+  }
+  .btn-green:hover { background: var(--green-dark); transform: translateY(-2px); }
+
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+  /* ─── RESULT ─── */
+  .result-icon {
+    font-size: 64px;
+    text-align: center;
+    margin-bottom: 16px;
+    animation: pop 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes pop { 0% { transform: scale(0); } 80% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px;
+    font-weight: 900;
+    color: var(--brown);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .result-desc {
+    text-align: center;
+    color: #7A6040;
+    font-size: 15px;
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .score-badge {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--brown);
+    font-size: 28px;
+    font-weight: 800;
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .score-badge small { font-size: 13px; font-weight: 500; display: block; opacity: 0.7; margin-top: 2px; }
+
+  .thr-link-box {
+    background: rgba(0,168,107,0.08);
+    border: 1.5px solid rgba(0,168,107,0.3);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .thr-link-label { font-size: 12px; font-weight: 700; color: var(--green-dark); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+  .thr-link {
+    display: inline-block;
+    word-break: break-all;
+    font-size: 13px;
+    color: var(--green-dark);
+    font-weight: 600;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  /* ─── ADMIN / BUILDER ─── */
+  .admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+
+  .admin-badge {
+    background: rgba(61,43,14,0.08);
+    color: var(--brown);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .form-group { margin-bottom: 20px; }
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--gold-dark);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(201,168,76,0.3);
+    background: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    color: var(--brown);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  }
+  .form-textarea { min-height: 70px; resize: vertical; line-height: 1.5; }
+
+  .q-block {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .q-num-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--gold-dark);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .q-num-label::after { content: ''; flex: 1; height: 1px; background: rgba(201,168,76,0.3); }
+
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .option-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1.5px solid rgba(201,168,76,0.25);
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .option-input-wrap:focus-within { border-color: var(--gold); }
+  .option-input-wrap.is-answer { border-color: var(--green); background: rgba(0,168,107,0.06); }
+  .option-input-wrap input[type="radio"] { accent-color: var(--green); }
+  .option-input-wrap input[type="text"] {
+    border: none;
+    outline: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    color: var(--brown);
+    flex: 1;
+    background: transparent;
+  }
+
+  .save-msg {
+    text-align: center;
+    font-size: 13px;
+    color: var(--green-dark);
+    font-weight: 600;
+    padding: 8px;
+    border-radius: 8px;
+    background: rgba(0,168,107,0.1);
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* ─── HOME SCREEN ─── */
+  .home-emoji { font-size: 56px; text-align: center; margin-bottom: 20px; animation: sway 3s ease-in-out infinite; }
+  @keyframes sway { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+
+  .rules-list { list-style: none; margin-bottom: 28px; }
+  .rules-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: #6B5230;
+    padding: 6px 0;
+    border-bottom: 1px dashed rgba(201,168,76,0.2);
+    line-height: 1.5;
+  }
+  .rules-list li:last-child { border-bottom: none; }
+  .rules-icon { color: var(--gold-dark); font-size: 16px; flex-shrink: 0; }
+
+  /* ─── CONFETTI ─── */
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* ─── ADMIN LOCK ─── */
+  .lock-overlay {
+    text-align: center;
+    padding: 10px 0;
+  }
+  .lock-icon { font-size: 40px; margin-bottom: 16px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 480px) {
+    .card { padding: 28px 20px; }
+    h1 { font-size: 28px; }
+    .options-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- ═══════════════════════════════
+     HOME SCREEN
+════════════════════════════════ -->
+<div class="screen active" id="screen-home">
+  <div class="card">
+    <div class="card-border"></div>
+    <div class="ornament ornament-tl"><svg viewBox="0 0 40 40" fill="none"><path d="M2 2 Q10 2 10 10 Q10 2 18 2" stroke="#C9A84C" stroke-width="1.5" fill="none"/><circle cx="2" cy="2" r="2" fill="#C9A84C"/></svg></div>
+    <div class="ornament ornament-tr"><svg viewBox="0 0 40 40" fill="none"><path d="M2 2 Q10 2 10 10 Q10 2 18 2" stroke="#C9A84C" stroke-width="1.5" fill="none"/><circle cx="2" cy="2" r="2" fill="#C9A84C"/></svg></div>
+    <div class="ornament ornament-bl"><svg viewBox="0 0 40 40" fill="none"><path d="M2 2 Q10 2 10 10 Q10 2 18 2" stroke="#C9A84C" stroke-width="1.5" fill="none"/><circle cx="2" cy="2" r="2" fill="#C9A84C"/></svg></div>
+    <div class="ornament ornament-br"><svg viewBox="0 0 40 40" fill="none"><path d="M2 2 Q10 2 10 10 Q10 2 18 2" stroke="#C9A84C" stroke-width="1.5" fill="none"/><circle cx="2" cy="2" r="2" fill="#C9A84C"/></svg></div>
+
+    <div class="home-emoji">🎁</div>
+
+    <div style="text-align:center;">
+      <div class="gopay-badge"><div class="dot-pulse"></div>GoPay THR</div>
+      <h1>Jawab & <span>Klaim</span> THR-mu!</h1>
+      <p class="subtitle">Jawab 5 soal dengan benar untuk mendapatkan link klaim THR spesial dari GoPay. Semangat!</p>
+    </div>
+
+    <ul class="rules-list">
+      <li><span class="rules-icon">✦</span>Ada 5 soal pilihan ganda yang harus dijawab</li>
+      <li><span class="rules-icon">✦</span>Semua jawaban harus benar untuk klaim THR</li>
+      <li><span class="rules-icon">✦</span>Kamu bisa lihat jawaban benar setelah menjawab</li>
+      <li><span class="rules-icon">✦</span>Klik <strong>Lanjut</strong> setelah menjawab tiap soal</li>
+    </ul>
+
+    <button class="btn btn-gold" onclick="startQuiz()">Mulai Quiz 🎊</button>
+
+    <div class="divider">✦</div>
+
+    <button class="btn btn-ghost" onclick="goAdmin()" style="font-size:13px; padding:12px;">⚙️ Edit Soal & Link THR</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     QUIZ SCREEN
+════════════════════════════════ -->
+<div class="screen" id="screen-quiz">
+  <div class="card">
+    <div class="card-border"></div>
+
+    <div class="progress-row">
+      <span class="progress-label" id="progress-text">Soal 1 dari 5</span>
+      <span style="font-size:13px; color: var(--gold-dark); font-weight:600;" id="progress-score">0 benar</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width: 20%;"></div>
+    </div>
+
+    <div class="question-num" id="q-num">SOAL 01</div>
+    <div class="question-text" id="q-text">Loading...</div>
+
+    <div class="options" id="options-container"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <button class="btn btn-gold" id="btn-next" onclick="nextQuestion()" disabled>Lanjut →</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     RESULT SCREEN
+════════════════════════════════ -->
+<div class="screen" id="screen-result">
+  <div class="card">
+    <div class="card-border"></div>
+
+    <div class="result-icon" id="result-icon">🎉</div>
+    <div class="result-title" id="result-title">Selamat!</div>
+    <p class="result-desc" id="result-desc">Kamu berhasil menjawab semua soal dengan benar!</p>
+
+    <div class="score-badge">
+      <div id="result-score-text">5 / 5</div>
+      <small id="result-score-sub">Jawaban Benar</small>
+    </div>
+
+    <div class="thr-link-box" id="thr-box" style="display:none;">
+      <div class="thr-link-label">🎁 Link Klaim THR-mu</div>
+      <a class="thr-link" id="thr-link-el" href="#" target="_blank">—</a>
+      <button class="btn btn-green" id="btn-claim" onclick="claimTHR()">Klaim THR Sekarang →</button>
+    </div>
+
+    <button class="btn btn-ghost" onclick="restartQuiz()" style="margin-top: 10px; font-size:14px;">Coba Lagi</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     ADMIN LOCK SCREEN
+════════════════════════════════ -->
+<div class="screen" id="screen-admin-lock">
+  <div class="card">
+    <div class="card-border"></div>
+    <div class="admin-header">
+      <span class="admin-badge">🔒 Admin</span>
+      <button onclick="showScreen('screen-home')" style="background:none; border:none; cursor:pointer; color:#7A6040; font-size:13px; font-weight:600;">← Kembali</button>
+    </div>
+    <div class="lock-overlay">
+      <div class="lock-icon">🔐</div>
+      <h1 style="font-size:24px; margin-bottom:8px;">Area Admin</h1>
+      <p class="subtitle">Masukkan password untuk mengakses halaman edit soal.</p>
+      <div class="form-group" style="text-align:left;">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="admin-pass" placeholder="Masukkan password..." onkeydown="if(event.key==='Enter') checkAdminPass()">
+        <p id="pass-err" style="color:var(--red); font-size:13px; margin-top:6px; display:none;">Password salah!</p>
+      </div>
+      <button class="btn btn-gold" onclick="checkAdminPass()">Masuk</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════
+     ADMIN BUILDER SCREEN
+════════════════════════════════ -->
+<div class="screen" id="screen-admin">
+  <div class="card">
+    <div class="card-border"></div>
+    <div class="admin-header">
+      <span class="admin-badge">⚙️ Edit Soal</span>
+      <button onclick="showScreen('screen-home')" style="background:none; border:none; cursor:pointer; color:#7A6040; font-size:13px; font-weight:600;">← Kembali</button>
+    </div>
+
+    <div id="questions-builder"></div>
+
+    <div class="divider">✦</div>
+
+    <div class="form-group">
+      <label class="form-label">🔑 Ganti Password Admin</label>
+      <input class="form-input" type="text" id="new-pass" placeholder="Kosongkan jika tidak ingin ganti">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">🔗 Link Klaim THR (GoPay)</label>
+      <input class="form-input" type="text" id="thr-link-input" placeholder="https://gopay.me/...">
+    </div>
+
+    <button class="btn btn-gold" onclick="saveAll()">💾 Simpan Semua</button>
+    <div class="save-msg" id="save-msg">✅ Berhasil disimpan!</div>
+  </div>
+</div>
+
+<script>
+// ─── DEFAULT DATA ───
+const DEFAULT_PASS = 'admin123';
+
+const DEFAULT_QUESTIONS = [
+  {
+    text: 'Apa kepanjangan dari THR?',
+    options: ['Tunjangan Hari Raya', 'Tabungan Hari Raya', 'Tanda Hari Raya', 'Transfer Hari Raya'],
+    answer: 0
+  },
+  {
+    text: 'GoPay adalah layanan dompet digital milik siapa?',
+    options: ['Tokopedia', 'Gojek', 'Shopee', 'Traveloka'],
+    answer: 1
+  },
+  {
+    text: 'Berapa hari libur nasional Lebaran biasanya?',
+    options: ['1 hari', '2 hari', '3 hari', '7 hari'],
+    answer: 1
+  },
+  {
+    text: 'Bulan apa Lebaran biasanya dirayakan?',
+    options: ['Ramadhan', 'Syawal', 'Dzulhijjah', 'Muharram'],
+    answer: 1
+  },
+  {
+    text: 'Apa kata sapaan khas saat Lebaran?',
+    options: ['Selamat Natal', 'Happy New Year', 'Minal Aidin Wal Faizin', 'Selamat Ulang Tahun'],
+    answer: 2
+  }
+];
+
+// ─── STATE ───
+let questions = [];
+let thrLink = '';
+let adminPass = DEFAULT_PASS;
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function loadData() {
+  try {
+    const q = localStorage.getItem('quiz_questions');
+    const l = localStorage.getItem('quiz_thr_link');
+    const p = localStorage.getItem('quiz_admin_pass');
+    questions = q ? JSON.parse(q) : DEFAULT_QUESTIONS;
+    thrLink = l || '';
+    adminPass = p || DEFAULT_PASS;
+  } catch(e) {
+    questions = DEFAULT_QUESTIONS;
+  }
+}
+
+function saveData() {
+  localStorage.setItem('quiz_questions', JSON.stringify(questions));
+  localStorage.setItem('quiz_thr_link', thrLink);
+  localStorage.setItem('quiz_admin_pass', adminPass);
+}
+
+// ─── SCREENS ───
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ─── QUIZ ───
+function startQuiz() {
+  loadData();
+  currentQ = 0;
+  score = 0;
+  answered = false;
+  renderQuestion();
+  showScreen('screen-quiz');
+}
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  const total = questions.length;
+  const letters = ['A', 'B', 'C', 'D'];
+
+  document.getElementById('progress-text').textContent = `Soal ${currentQ + 1} dari ${total}`;
+  document.getElementById('progress-score').textContent = `${score} benar`;
+  document.getElementById('progress-fill').style.width = `${((currentQ + 1) / total) * 100}%`;
+  document.getElementById('q-num').textContent = `SOAL ${String(currentQ + 1).padStart(2, '0')}`;
+  document.getElementById('q-text').textContent = q.text;
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${opt}`;
+    btn.onclick = () => selectOption(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('btn-next').disabled = true;
+  answered = false;
+}
+
+function selectOption(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[currentQ];
+  const opts = document.querySelectorAll('.option');
+  const fb = document.getElementById('feedback');
+
+  opts.forEach(o => o.disabled = true);
+  opts[idx].classList.add(idx === q.answer ? 'correct' : 'wrong');
+
+  if (idx === q.answer) {
+    score++;
+    fb.className = 'feedback correct';
+    fb.textContent = '✅ Benar! Jawaban kamu tepat!';
+  } else {
+    opts[q.answer].classList.add('correct');
+    fb.className = 'feedback wrong';
+    fb.textContent = `❌ Salah! Jawaban yang benar: ${q.options[q.answer]}`;
+  }
+
+  document.getElementById('btn-next').disabled = false;
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  const total = questions.length;
+  const perfect = score === total;
+
+  document.getElementById('result-icon').textContent = perfect ? '🎉' : '😊';
+  document.getElementById('result-title').textContent = perfect ? 'Yeay, Sempurna!' : 'Hampir Sempurna!';
+  document.getElementById('result-desc').textContent = perfect
+    ? 'Kamu menjawab semua soal dengan benar! Selamat klaim THR-mu 🎁'
+    : `Kamu menjawab ${score} dari ${total} soal dengan benar. Coba lagi ya!`;
+  document.getElementById('result-score-text').textContent = `${score} / ${total}`;
+  document.getElementById('result-score-sub').textContent = 'Jawaban Benar';
+
+  const thrBox = document.getElementById('thr-box');
+  if (perfect && thrLink) {
+    const el = document.getElementById('thr-link-el');
+    el.textContent = thrLink;
+    el.href = thrLink;
+    thrBox.style.display = 'block';
+    launchConfetti();
+  } else {
+    thrBox.style.display = 'none';
+  }
+
+  showScreen('screen-result');
+}
+
+function claimTHR() {
+  window.open(thrLink, '_blank');
+}
+
+function restartQuiz() {
+  startQuiz();
+}
+
+// ─── ADMIN ───
+function goAdmin() {
+  loadData();
+  document.getElementById('admin-pass').value = '';
+  document.getElementById('pass-err').style.display = 'none';
+  showScreen('screen-admin-lock');
+}
+
+function checkAdminPass() {
+  const val = document.getElementById('admin-pass').value;
+  if (val === adminPass) {
+    buildAdminForm();
+    showScreen('screen-admin');
+  } else {
+    document.getElementById('pass-err').style.display = 'block';
+  }
+}
+
+function buildAdminForm() {
+  const builder = document.getElementById('questions-builder');
+  builder.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+
+  questions.forEach((q, qi) => {
+    const block = document.createElement('div');
+    block.className = 'q-block';
+    block.innerHTML = `
+      <div class="q-num-label">Soal ${qi + 1}</div>
+      <div class="form-group">
+        <label class="form-label">Pertanyaan</label>
+        <textarea class="form-textarea" id="q-text-${qi}" placeholder="Tulis pertanyaan...">${q.text}</textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pilihan Jawaban — pilih yang benar ✓</label>
+        <div class="options-grid" id="opts-${qi}">
+          ${q.options.map((opt, oi) => `
+            <label class="option-input-wrap ${oi === q.answer ? 'is-answer' : ''}" id="opt-wrap-${qi}-${oi}">
+              <input type="radio" name="ans-${qi}" value="${oi}" ${oi === q.answer ? 'checked' : ''} onchange="markAnswer(${qi}, ${oi})">
+              <input type="text" id="opt-${qi}-${oi}" value="${opt}" placeholder="Pilihan ${letters[oi]}">
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    builder.appendChild(block);
+  });
+
+  document.getElementById('thr-link-input').value = thrLink;
+  document.getElementById('new-pass').value = '';
+}
+
+function markAnswer(qi, oi) {
+  for (let i = 0; i < 4; i++) {
+    const w = document.getElementById(`opt-wrap-${qi}-${i}`);
+    if (w) w.classList.toggle('is-answer', i === oi);
+  }
+}
+
+function saveAll() {
+  const newQuestions = [];
+  for (let qi = 0; qi < questions.length; qi++) {
+    const text = document.getElementById(`q-text-${qi}`).value.trim();
+    const options = [];
+    for (let oi = 0; oi < 4; oi++) {
+      options.push(document.getElementById(`opt-${qi}-${oi}`).value.trim());
+    }
+    const ansRadio = document.querySelector(`input[name="ans-${qi}"]:checked`);
+    const answer = ansRadio ? parseInt(ansRadio.value) : 0;
+    newQuestions.push({ text, options, answer });
+  }
+  questions = newQuestions;
+  thrLink = document.getElementById('thr-link-input').value.trim();
+  const np = document.getElementById('new-pass').value.trim();
+  if (np) adminPass = np;
+
+  saveData();
+
+  const msg = document.getElementById('save-msg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 2500);
+}
+
+// ─── CONFETTI ───
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const pieces = [];
+  const colors = ['#C9A84C', '#F5D97A', '#00A86B', '#FFFFFF', '#FF6B6B', '#4ECDC4'];
+
+  for (let i = 0; i < 120; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: -Math.random() * 200,
+      w: 8 + Math.random() * 10,
+      h: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 4,
+      vy: 3 + Math.random() * 4,
+      rot: Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 8,
+      alpha: 1
+    });
+  }
+
+  let frame;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    pieces.forEach(p => {
+      if (p.y < canvas.height + 50) alive = true;
+      p.x += p.vx; p.y += p.vy; p.rot += p.rotV;
+      if (p.y > canvas.height * 0.7) p.alpha -= 0.02;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.globalAlpha = Math.max(0, p.alpha);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    if (alive) frame = requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ─── INIT ───
+loadData();
+</script>
+</body>
+</html>
